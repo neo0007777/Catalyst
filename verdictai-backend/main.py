@@ -24,7 +24,9 @@ from groq import Groq
 app = FastAPI(title="Catalyst VerdictAI Backend")
 
 # Allow all origins in dev; restrict via ALLOWED_ORIGINS env in production
-_allowed = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000").split(",")
+_default_origins = "http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,https://catalyst-heilix.vercel.app"
+_allowed = os.getenv("ALLOWED_ORIGINS", _default_origins).split(",")
+print(f"[CORS] Permitting requests from: {_allowed}")
 
 app.add_middleware(
     CORSMiddleware,
