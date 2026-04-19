@@ -14,7 +14,7 @@ from engine.model import get_model, predict, build_feature_vector, get_feature_n
 from engine.explainer import get_explainer, explain, generate_advisor_narrative
 from engine.ai_bridge import AIBridge
 from engine.adversarial import find_minimum_flip
-from engine.nlp import get_embedder, process_appeal, recalculate_with_mitigations, score_evidence_strength, detect_tone
+from engine.nlp import get_vectorizer, process_appeal, recalculate_with_mitigations, score_evidence_strength, detect_tone
 from engine.bias import init_db, log_decision, log_appeal, compute_bias_metrics
 from data.loader import get_train_test_split
 from auth_router import router as auth_router
@@ -98,7 +98,7 @@ async def startup_event():
     
     # 5. NLP Model
     print("Loading Sentence Transformers...")
-    get_embedder()
+    get_vectorizer()
     
     # 6. Gemini for Chat
     gk = os.getenv("GEMINI_API_KEY")
