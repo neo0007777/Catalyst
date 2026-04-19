@@ -159,13 +159,13 @@ def process_appeal(appeal_texts: list[str], flagged_factors: list[str]) -> list:
         m_type = "none"
         reduction = 0.0
         
-        # RAISED THRESHOLDS: prevents vague text from gaming the system
-        if max_sim > 0.60:      # Strong evidence → full mitigation
+        # RE-CALIBRATED THRESHOLDS FOR TF-IDF
+        if max_sim > 0.35:      # High semantic overlap for keywords
             m_type = "full"
-            reduction = 0.75   # Conservative: only reduce by 75%, not wipe entirely
-        elif max_sim > 0.45:    # Moderate evidence → partial mitigation
+            reduction = 0.90    # Decisive impact for strong proof
+        elif max_sim > 0.18:    # Reasonable contextual overlap
             m_type = "partial"
-            reduction = 0.35   # Partial: only 35% reduction, not enough to flip marginal cases
+            reduction = 0.50    # Moderate impact
             
         if m_type != "none":
             mitigations.append({
