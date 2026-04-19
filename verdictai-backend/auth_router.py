@@ -32,6 +32,20 @@ class EmailRequest(BaseModel):
 async def verify_google_token(body: GoogleTokenRequest):
     """Verify a Google ID token and return user info."""
     client_id = os.getenv("GOOGLE_CLIENT_ID")
+    
+    # NEW: Handle Demo Mode
+    if body.credential == "demo_credential":
+        log.info("Demo Login used.")
+        return {
+            "success": True,
+            "user": {
+                "email":   "tester@catalyst.ai",
+                "name":    "Catalyst Tester",
+                "picture": None,
+                "sub":     "demo-123",
+            }
+        }
+
     if not client_id:
         raise HTTPException(status_code=500, detail="Google OAuth not configured (missing GOOGLE_CLIENT_ID).")
     try:
@@ -47,11 +61,10 @@ async def verify_google_token(body: GoogleTokenRequest):
                 "email":   info.get("email"),
                 "name":    info.get("name"),
                 "picture": info.get("picture"),
-                "sub":     info.get("sub"),       # stable Google user ID
+                "sub":     info.get("sub"),
             }
         }
     except Exception as e:
-        print(f"CRITICAL: Google OAuth verification failed: {str(e)}")
         log.warning("Invalid Google token: %s", e)
         raise HTTPException(status_code=401, detail=f"Invalid Google token: {str(e)}")
 

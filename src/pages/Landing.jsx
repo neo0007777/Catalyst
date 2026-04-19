@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 
 /* ── Auth Modal ─────────────────────────────────────────────────── */
 function AuthModal({ onClose, onDone }) {
-  const { loginWithGoogle, loginWithEmail, loading, googleClientId } = useAuth();
+  const { loginWithGoogle, loginWithEmail, loading, googleClientId, demoMode } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
@@ -67,7 +67,9 @@ function AuthModal({ onClose, onDone }) {
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{ width: 44, height: 44, background: '#1B2A4A', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', fontFamily: "'Outfit', sans-serif", fontSize: 24, color: '#C6A96B' }}>C</div>
           <h2 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 26, color: '#1B2A4A', marginBottom: 6 }}>Sign in to Catalyst</h2>
-          <div style={{ fontSize: 10, color: '#B5AFA4', fontStyle: 'italic' }}>ID: {googleClientId?.slice(0, 10)}...</div>
+          <div style={{ fontSize: 10, color: demoMode ? '#C6A96B' : '#9C9487', fontWeight: demoMode ? 600 : 400, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {demoMode ? '✨ Mode: Demo / Sandbox' : `ID: ${googleClientId?.slice(0, 10)}...`}
+          </div>
         </div>
 
         {emailSent ? (
@@ -82,7 +84,32 @@ function AuthModal({ onClose, onDone }) {
         ) : (
           <>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 20 }}>
-              <div id="g-btn" />
+              {demoMode ? (
+                <button 
+                  onClick={() => loginWithGoogle("demo_credential")}
+                  className="btn-gold" 
+                  style={{ 
+                    width: '100%', 
+                    padding: '12px', 
+                    borderRadius: 10, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: 10,
+                    fontSize: 15,
+                    fontWeight: 600,
+                    border: '1px solid #C6A96B',
+                    background: '#fff',
+                    color: '#C6A96B',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Icon.User size={20} />
+                  Demo Google Sign-In
+                </button>
+              ) : (
+                <div id="g-btn" />
+              )}
               {err && <div style={{ fontSize: 13, color: '#9B1C1C', marginTop: 16, padding: '10px', background: '#FFF5F5', borderRadius: 8, width: '100%', textAlign: 'center' }}>{err}</div>}
             </div>
 
