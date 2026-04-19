@@ -1,4 +1,5 @@
-from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import pandas as pd
 import logging
@@ -63,17 +64,15 @@ FACTOR_BINS = {
     "Total Delinquency Score": "high_delinquencies"
 }
 
-_embedder = None
+_vectorizer = None
 
-def get_embedder():
-    global _embedder
-    if _embedder is None:
-        logger.info("Loading sentence transformer all-MiniLM-L6-v2...")
-        _embedder = SentenceTransformer("all-MiniLM-L6-v2")
-    return _embedder
-
-def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
-    return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
+def get_vectorizer():
+    global _vectorizer
+    if _vectorizer is None:
+        logger.info("Initializing Light-Weight TF-IDF Vectorizer...")
+        # We use a simple vectorizer that works well for short-text similarity
+        _vectorizer = TfidfVectorizer(stop_words='english', lowercase=True)
+    return _vectorizer
 
 # Meaningful financial keywords required for valid evidence
 _FINANCIAL_KEYWORDS = [
@@ -111,11 +110,11 @@ def _passes_quality_gate(text: str) -> tuple[bool, str]:
 
 def process_appeal(appeal_texts: list[str], flagged_factors: list[str]) -> list:
     """
-    Evaluates evidence using Sentence Transformers with a multi-layer quality gate.
+    Evaluates evidence using TF-IDF Vectorization with a multi-layer quality gate.
     Returns: [{ factor, mitigation_type: "full"|"partial"|"none", 
                 similarity_score, matched_concept, reduction_factor }]
     """
-    embedder = get_embedder()
+    vectorizer = get_vectorizer()
     
     # Pre-screen all appeal texts — reject low quality inputs
     screened_texts = []
@@ -128,10 +127,7 @@ def process_appeal(appeal_texts: list[str], flagged_factors: list[str]) -> list:
     
     if not screened_texts:
         logger.warning("All evidence texts failed quality gate. No mitigations will be applied.")
-        return []  # Nothing passes — appeal fails
-    
-    # Embed only the screened, quality evidence
-    appeal_embeddings = embedder.encode(screened_texts)
+        return []
     
     mitigations = []
     
@@ -141,17 +137,22 @@ def process_appeal(appeal_texts: list[str], flagged_factors: list[str]) -> list:
             continue
             
         corpus = MITIGATION_CORPUS[concept]
-        corpus_embeddings = embedder.encode(corpus)
         
-        max_sim = 0.0
-        best_match = None
+        # Build a temporary matrix to compare appeal texts against corpus
+        # We combine them so the TF-IDF vocabulary covers both
+        all_docs = corpus + screened_texts
+        tfidf_matrix = vectorizer.fit_transform(all_docs)
         
-        for i, a_emb in enumerate(appeal_embeddings):
-            for j, c_emb in enumerate(corpus_embeddings):
-                sim = cosine_similarity(a_emb, c_emb)
-                if sim > max_sim:
-                    max_sim = sim
-                    best_match = corpus[j]
+        # Separate the matrix
+        corpus_vectors = tfidf_matrix[:len(corpus)]
+        appeal_vectors = tfidf_matrix[len(corpus):]
+        
+        # Compute cosine similarity between every appeal and every corpus item
+        sim_matrix = cosine_similarity(appeal_vectors, corpus_vectors)
+        
+        max_sim = np.max(sim_matrix)
+        best_match_idx = np.unravel_index(np.argmax(sim_matrix), sim_matrix.shape)[1]
+        best_match = corpus[best_match_idx]
         
         logger.info(f"Factor '{factor}' → concept '{concept}' → max_sim={max_sim:.3f}")
                     
