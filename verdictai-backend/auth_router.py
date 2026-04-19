@@ -33,21 +33,9 @@ async def verify_google_token(body: GoogleTokenRequest):
     """Verify a Google ID token and return user info."""
     client_id = os.getenv("GOOGLE_CLIENT_ID")
     
-    # NEW: Handle Demo Mode
-    if body.credential == "demo_credential":
-        log.info("Demo Login used.")
-        return {
-            "success": True,
-            "user": {
-                "email":   "tester@catalyst.ai",
-                "name":    "Catalyst Tester",
-                "picture": None,
-                "sub":     "demo-123",
-            }
-        }
-
     if not client_id:
-        raise HTTPException(status_code=500, detail="Google OAuth not configured (missing GOOGLE_CLIENT_ID).")
+        log.error("CRITICAL: GOOGLE_CLIENT_ID is missing from Render environment variables.")
+        raise HTTPException(status_code=500, detail="Server Configuration Error: GOOGLE_CLIENT_ID is missing.")
     try:
         info = google_id_token.verify_oauth2_token(
             body.credential,
@@ -77,7 +65,8 @@ async def send_welcome_email(body: EmailRequest):
     gmail_user = os.getenv("GMAIL_USER", "harshakya56@gmail.com")
     gmail_pass = os.getenv("GMAIL_APP_PASSWORD")
     if not gmail_pass:
-        raise HTTPException(status_code=500, detail="Email not configured (missing GMAIL_APP_PASSWORD).")
+        log.error("CRITICAL: GMAIL_APP_PASSWORD is missing. Account verification emails cannot be sent.")
+        raise HTTPException(status_code=500, detail="Server Configuration Error: Email service not configured.")
 
     # Generate a magic link with encoded name for personalization
     import base64
@@ -149,5 +138,5 @@ async def send_welcome_email(body: EmailRequest):
         )
         return {"success": True, "message": f"Welcome email sent to {body.email}"}
     except Exception as e:
-        log.error("Failed to send email: %s", e)
-        raise HTTPException(status_code=500, detail=f"Email send failed: {str(e)}")
+        log.exception("SMTP Error: Failed to send verify email via Gmail")
+        raise HTTPException(status_code=500, detail=f"Email delivery failed. Please check backend logs.")

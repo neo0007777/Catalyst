@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-const DEMO_MODE = !GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'your_google_client_id_here';
 
 const AuthCtx = createContext(null);
 export const useAuth = () => useContext(AuthCtx);
@@ -81,16 +80,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthCtx.Provider value={{ 
-      user, 
-      loading, 
-      loginWithGoogle, 
-      loginWithEmail, 
-      verifyMagicLink, 
-      logout, 
-      googleClientId: GOOGLE_CLIENT_ID,
-      demoMode: DEMO_MODE 
-    }}>
+    <AuthCtx.Provider value={{ user, loading, loginWithGoogle, loginWithEmail, verifyMagicLink, logout, googleClientId: GOOGLE_CLIENT_ID }}>
       {children}
     </AuthCtx.Provider>
   );
