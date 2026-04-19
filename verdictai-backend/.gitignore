@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Data & Models
+debug_factors.json
+models_list.json
+backend.log
+data/*.csv
+!data/.gitkeep
+
+# Testing & Debug
+test_*.py
+debug_*.py
+fix_type.py
+performance_test.py
+EOF
