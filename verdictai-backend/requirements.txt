@@ -5,11 +5,8 @@ shap==0.45.0
 scikit-learn>=1.4.0
 pandas==2.2.2
 numpy>=1.26.0
-sqlmodel==0.0.16
 python-dotenv==1.0.1
 httpx==0.27.0
-google-auth==2.49.2
-aiosmtplib==4.0.2
 google-generativeai
 groq
 python-multipart
